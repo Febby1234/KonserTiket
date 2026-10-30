@@ -1,7 +1,6 @@
 const bookingForm = document.querySelector('#booking-form');
 const eventSelect = document.querySelector('#event-select');
 const ticketQuantity = document.querySelector('#ticket-quantity');
-const confirmation = document.querySelector('#confirmation');
 
 const formatPrice = (amount) => new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -53,45 +52,23 @@ function updateOrderSummary() {
 }
 
 eventSelect.addEventListener('change', () => {
-    confirmation.hidden = true;
     updateOrderSummary();
 });
 
 bookingForm.querySelectorAll('input[name="ticket_type"]').forEach((input) => {
     input.addEventListener('change', () => {
-        confirmation.hidden = true;
         updateOrderSummary();
     });
 });
 
 document.querySelector('#decrease-quantity').addEventListener('click', () => {
     ticketQuantity.value = String(Math.max(1, Number(ticketQuantity.value) - 1));
-    confirmation.hidden = true;
     updateOrderSummary();
 });
 
 document.querySelector('#increase-quantity').addEventListener('click', () => {
     ticketQuantity.value = String(Math.min(5, Number(ticketQuantity.value) + 1));
-    confirmation.hidden = true;
     updateOrderSummary();
-});
-
-bookingForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    if (!bookingForm.reportValidity()) {
-        return;
-    }
-
-    const selectedEvent = getSelectedEvent();
-    const customerName = new FormData(bookingForm).get('name');
-    const quantity = Number(ticketQuantity.value);
-    const ticketType = bookingForm.elements.ticket_type.value === 'vip' ? 'VIP' : 'Reguler';
-
-    document.querySelector('#confirmation-message').textContent =
-        `${customerName}, pilihanmu: ${selectedEvent.dataset.title} · ${quantity} tiket ${ticketType} · ${formatPrice(getTicketPrice() * quantity)}.`;
-    confirmation.hidden = false;
-    confirmation.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
 updateOrderSummary();

@@ -173,6 +173,22 @@ select:focus-visible {
     gap: 18px;
 }
 
+.form-errors {
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    border: 1px solid #efc7c1;
+    border-radius: 7px;
+    background: #fff8f6;
+    color: #8e382c;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.form-errors ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
 .form-column {
     display: grid;
     gap: 15px;

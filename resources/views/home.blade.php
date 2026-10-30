@@ -28,10 +28,22 @@
             <section class="intro">
                 <p class="eyebrow"><span class="eyebrow-dot"></span> SATU HALAMAN, TINGGAL ISI</p>
                 <h1>Siap untuk<br>malam <span>yang seru?</span></h1>
-                <p class="intro-copy">Isi data diri, pilih konser dan tiketmu. Ringkasan pesanan langsung muncul di sebelah.</p>
+                <p class="intro-copy">Isi data diri, pilih konser dan tiketmu. Ringkasan permintaan akan dikirim ke emailmu.</p>
             </section>
 
-            <form class="booking-layout" id="booking-form">
+            @if ($errors->any())
+                <div class="form-errors" role="alert">
+                    <strong>Periksa kembali data pemesananmu:</strong>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form class="booking-layout" id="booking-form" method="POST" action="{{ route('bookings.store') }}">
+                @csrf
                 <div class="form-column">
                     <section class="form-card" aria-labelledby="contact-heading">
                         <div class="card-heading">
@@ -45,15 +57,15 @@
                         <div class="fields-grid">
                             <label class="field field-full">
                                 <span>Nama lengkap</span>
-                                <input name="name" type="text" autocomplete="name" placeholder="Contoh: Febby Putri" required maxlength="100">
+                                <input name="name" type="text" autocomplete="name" placeholder="Contoh: Febby Putri" value="{{ old('name') }}" required maxlength="100">
                             </label>
                             <label class="field">
                                 <span>Email</span>
-                                <input name="email" type="email" autocomplete="email" placeholder="nama@email.com" required maxlength="254">
+                                <input name="email" type="email" autocomplete="email" placeholder="nama@email.com" value="{{ old('email') }}" required maxlength="254">
                             </label>
                             <label class="field">
                                 <span>Nomor telepon</span>
-                                <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="081234567890" pattern="\+?[0-9]{8,15}" title="Masukkan 8–15 angka, dengan tanda + di depan jika perlu." required maxlength="16">
+                                <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="081234567890" value="{{ old('phone') }}" pattern="\+?[0-9]{8,15}" title="Masukkan 8–15 angka, dengan tanda + di depan jika perlu." required maxlength="16">
                             </label>
                         </div>
                     </section>
@@ -71,20 +83,16 @@
                             <span>Nama konser</span>
                             <select name="event" id="event-select" required>
                                 <option value="" selected disabled>Pilih konser</option>
-                                <option value="pestapora" data-title="Pestapora 2027" data-date="13–14 Februari 2027" data-venue="Gambir Expo, Jakarta" data-regular="450000" data-vip="720000">Pestapora 2027 — Jakarta</option>
-                                <option value="raisa" data-title="Raisa Live in Concert" data-date="7 November 2026" data-venue="Beach City International Stadium, Jakarta" data-regular="350000" data-vip="560000">Raisa Live in Concert — Jakarta</option>
-                                <option value="hindia" data-title="Hindia: Lagipula Hidup Akan Berakhir" data-date="14 November 2026" data-venue="Eldorado Dome, Bandung" data-regular="275000" data-vip="440000">Hindia: Lagipula Hidup Akan Berakhir — Bandung</option>
-                                <option value="java-jazz" data-title="Java Jazz Festival" data-date="21 November 2026" data-venue="JIExpo Kemayoran, Jakarta" data-regular="550000" data-vip="880000">Java Jazz Festival — Jakarta</option>
-                                <option value="sounds-island" data-title="Sounds of the Island" data-date="5 Desember 2026" data-venue="Atlas Beach Club, Bali" data-regular="425000" data-vip="680000">Sounds of the Island — Bali</option>
-                                <option value="panturas" data-title="The Panturas: Ombak Banyu Asmara" data-date="12 Desember 2026" data-venue="Lapangan PPI Pussenif, Bandung" data-regular="185000" data-vip="296000">The Panturas: Ombak Banyu Asmara — Bandung</option>
-                                <option value="jazz-gunung" data-title="Jazz Gunung Bromo" data-date="19 Desember 2026" data-venue="Amfiteater Jiwa Jawa, Bromo" data-regular="390000" data-vip="624000">Jazz Gunung Bromo — Bromo</option>
+                                @foreach (config('concerts') as $slug => $concert)
+                                    <option value="{{ $slug }}" data-title="{{ $concert['title'] }}" data-date="{{ $concert['date'] }}" data-venue="{{ $concert['venue'] }}" data-regular="{{ $concert['prices']['regular'] }}" data-vip="{{ $concert['prices']['vip'] }}" @selected(old('event') === $slug)>{{ $concert['label'] }}</option>
+                                @endforeach
                             </select>
                         </label>
 
                         <fieldset class="ticket-options">
                             <legend class="field-legend">Kategori tiket</legend>
                             <label class="ticket-option">
-                                <input type="radio" name="ticket_type" value="regular" checked>
+                                <input type="radio" name="ticket_type" value="regular" @checked(old('ticket_type', 'regular') === 'regular')>
                                 <span class="radio-indicator" aria-hidden="true"></span>
                                 <span class="ticket-option-copy">
                                     <strong>Reguler</strong>
@@ -93,7 +101,7 @@
                                 <span class="ticket-option-price" id="regular-price">Pilih konser</span>
                             </label>
                             <label class="ticket-option">
-                                <input type="radio" name="ticket_type" value="vip">
+                                <input type="radio" name="ticket_type" value="vip" @checked(old('ticket_type') === 'vip')>
                                 <span class="radio-indicator" aria-hidden="true"></span>
                                 <span class="ticket-option-copy">
                                     <strong>VIP</strong>
@@ -112,7 +120,7 @@
                                 <button class="quantity-button" id="decrease-quantity" type="button" aria-label="Kurangi jumlah tiket">−</button>
                                 <output id="quantity" for="ticket-quantity" aria-live="polite">1</output>
                                 <button class="quantity-button" id="increase-quantity" type="button" aria-label="Tambah jumlah tiket">+</button>
-                                <input class="visually-hidden" id="ticket-quantity" name="quantity" type="number" value="1" min="1" max="5" required tabindex="-1" aria-hidden="true">
+                                <input class="visually-hidden" id="ticket-quantity" name="quantity" type="number" value="{{ old('quantity', 1) }}" min="1" max="5" required tabindex="-1" aria-hidden="true">
                             </div>
                         </div>
                     </section>
@@ -147,23 +155,25 @@
                     </div>
 
                     <button class="submit-button" type="submit">
-                        Siapkan pesanan
+                        Kirim permintaan & konfirmasi email
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
                     </button>
-                    <p class="demo-note">Ini demo pemesanan. Belum ada pembayaran, dan data tidak dikirim atau disimpan.</p>
+                    <p class="demo-note">Ringkasan permintaan dikirim ke emailmu. Ini demo: tidak ada pembayaran dan tiket belum diterbitkan.</p>
                 </aside>
             </form>
 
-            <section class="confirmation-card" id="confirmation" role="status" aria-live="polite" hidden>
+            @if ($booking = session('booking_confirmation'))
+                <section class="confirmation-card" id="confirmation" role="status" aria-live="polite">
                 <span class="confirmation-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"></path></svg>
                 </span>
                 <div>
-                    <h2>Ringkasan tiketmu sudah siap</h2>
-                    <p id="confirmation-message"></p>
-                    <p class="confirmation-disclaimer">Ini masih demo — pesanan belum dikirim, tiket belum diterbitkan, dan tidak ada pembayaran.</p>
+                    <h2>Permintaan pesanan terkirim</h2>
+                    <p>{{ $booking['customerName'] }}, ringkasan {{ $booking['quantity'] }} tiket {{ $booking['ticketType'] }} untuk {{ $booking['eventTitle'] }} (Rp{{ $booking['totalPrice'] }}) telah dikirim ke {{ $booking['email'] }}.</p>
+                    <p class="confirmation-disclaimer">Ini masih demo — email ini bukan tiket, tiket belum diterbitkan, dan tidak ada pembayaran.</p>
                 </div>
-            </section>
+                </section>
+            @endif
         </main>
 
         <footer class="site-footer">
