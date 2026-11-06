@@ -3,6 +3,7 @@ name: Laravel 13 CI/CD Deployment
 on:
   push:
     branches: [ "main" ] # Triggers only when code is pushed to your main production branch
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -118,24 +119,36 @@ jobs:
       uses: appleboy/scp-action@v1.0.0
       with:
         host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
+        username: ${{ secrets.SSH_USERNAME || secrets.SSH_USERMAME }}
         password: ${{ secrets.SSH_PASSWORD }}
-        port: 22
+        port: ${{ secrets.SSH_PORT || 22 }}
         source: "vendor.tar.gz"
-        target: "/home/cloudcomp-konserfebby/htdocs/konserfebby.cloudcomp.my.id/public"
+        target: ${{ secrets.APP_PATH || '/home/cloudcomp-konserfebby/htdocs/konserfebby.cloudcomp.my.id/public' }}
 
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v1.2.5
+      env:
+        APP_PATH: ${{ secrets.APP_PATH || '/home/cloudcomp-konserfebby/htdocs/konserfebby.cloudcomp.my.id/public' }}
       with:
         host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
+        username: ${{ secrets.SSH_USERNAME || secrets.SSH_USERMAME }}
         password: ${{ secrets.SSH_PASSWORD }}
-        port: 22
+        port: ${{ secrets.SSH_PORT || 22 }}
+        envs: APP_PATH
+        script_stop: true
         script: |
-          cd /home/cloudcomp-konserfebby/htdocs/konserfebby.cloudcomp.my.id/public
-          git pull origin main
+          set -e
+          cd "$APP_PATH"
+          if [ ! -f artisan ] || [ ! -d .git ]; then
+            echo "ERROR: $APP_PATH bukan folder project Laravel (artisan/.git tidak ditemukan). Isi folder:"
+            ls -la
+            exit 1
+          fi
+          git fetch origin main
+          git reset --hard origin/main
           rm -rf vendor
           tar -xzf vendor.tar.gz
           rm -f vendor.tar.gz
           php artisan migrate --force
-          php artisan config:cache
+          php artisan optimize:clear
+          php artisan optimize
