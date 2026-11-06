@@ -37,7 +37,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
 
     - name: Copy Environment File
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
@@ -70,7 +70,7 @@ jobs:
     # Compile frontend production assets (Vite) so they are ready for deployment
     - name: Install NPM Dependencies & Build Assets
       run: |
-        npm ci
+        npm ci --include=optional
         npm run build
 
     # Optional: Push compiled production assets back to Git if your deployment relies on Git integration
