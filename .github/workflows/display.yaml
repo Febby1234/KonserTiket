@@ -121,7 +121,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
         source: "vendor.tar.gz"
-        target: "https://konserfebby.cloudcomp.my.id/"
+        target: "/home/cloudcomp-konserfebby/htdocs/konserfebby.cloudcomp.my.id/public/"
 
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v1.2.5
@@ -131,7 +131,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
         script: |
-          cd https://konserfebby.cloudcomp.my.id/
+          cd /home/cloudcomp-konserfebby/htdocs/konserfebby.cloudcomp.my.id/public
           git pull origin main
           rm -rf vendor
           tar -xzf vendor.tar.gz
