@@ -79,7 +79,7 @@ jobs:
         git diff-index --quiet HEAD || git commit -m "chore: build production assets [skip ci]"
         git push origin main
       env:
-        GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
 
   deploy:
     name: Deploy to Live Hosting
