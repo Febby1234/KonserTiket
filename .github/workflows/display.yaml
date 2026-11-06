@@ -138,11 +138,24 @@ jobs:
         script_stop: true
         script: |
           set -e
-          cd "$APP_PATH"
-          if [ ! -f artisan ] || [ ! -d .git ]; then
-            echo "ERROR: $APP_PATH bukan folder project Laravel (artisan/.git tidak ditemukan). Isi folder:"
-            ls -la
+          UPLOAD_DIR="$APP_PATH"
+          if [ -f "$APP_PATH/artisan" ]; then
+            ROOT="$APP_PATH"
+          elif [ -f "$APP_PATH/../artisan" ]; then
+            ROOT="$(cd "$APP_PATH/.." && pwd)"
+          else
+            echo "ERROR: artisan tidak ditemukan di $APP_PATH maupun folder induknya."
+            ls -la "$APP_PATH" "$APP_PATH/.."
             exit 1
+          fi
+          echo "Project root: $ROOT"
+          cd "$ROOT"
+          if [ "$UPLOAD_DIR" != "$ROOT" ]; then
+            mv -f "$UPLOAD_DIR/vendor.tar.gz" "$ROOT/vendor.tar.gz"
+          fi
+          if [ ! -d .git ]; then
+            git init -q
+            git remote add origin https://github.com/${{ github.repository }}.git
           fi
           git fetch origin main
           git reset --hard origin/main
